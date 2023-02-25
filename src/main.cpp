@@ -1,8 +1,9 @@
 ﻿#include "Server.h"
+#include "ShutdownHandler.h"
 
 #include <boost/asio.hpp>
 
-#include <csignal>
+#include <cctype>
 #include <cstddef>
 #include <cstdint>
 #include <iostream>
@@ -20,32 +21,34 @@ namespace Homework {
 
         const Port MAX_PORT = 65535;
 
-        const std::string INVALID_PORT = "A port must be in the range [0-" + std::to_string(MAX_PORT) + "].";
+        const std::string PORT_AND_BLOCK_SIZE_NOT_POSITIVE_MSG = "PORT and BLOCK_SIZE must be positive numbers.";
+        const std::string INVALID_PORT_MSG = "A port must be in the range [0-" + std::to_string(MAX_PORT) + "].";
+        const std::string INVALID_NUMBER_OF_ARGUMETNS = "'bulk_server' requires 2 arguments.\n\nUsage:\tbulk_server PORT BLOCK_SIZE\n";
+    }
 
-        //we have to make the context a global variable because it is used in cleanUp()
-        CommandProcessingContext commandContext;
+    long stringToLong(const std::string& input) {
+        for (auto character : input) {
+            if (!std::isdigit(character)) {
+                throw std::invalid_argument(PORT_AND_BLOCK_SIZE_NOT_POSITIVE_MSG);
+            }
+        }
+        return std::stoul(input);
     }
 
     Port stringToPort(const std::string& portAsStr) {
-        long number = std::stoul(portAsStr);
+        long number = stringToLong(portAsStr);
         if (number > MAX_PORT) {
-            throw std::invalid_argument(INVALID_PORT);
+            throw std::invalid_argument(INVALID_PORT_MSG);
         }
         return static_cast<Port>(number);
     }
 
     void readProgramArguments(int argc, char* argv[], Port& outputPort, std::size_t& outputBlockSize) {
         if (argc != NUMBER_OF_ARGUMENTS) {
-            throw std::invalid_argument("Wrong number of arguments. The format of the command is:\nbulk_server port block_size");
+            throw std::invalid_argument(INVALID_NUMBER_OF_ARGUMETNS);
         }
-
         outputPort = stringToPort(argv[PORT_ARG_INDEX]);
-        outputBlockSize = static_cast<std::size_t>(std::stoul(argv[BLOCK_SIZE_ARG_INDEX]));
-    }
-
-    void processShutdownHandler(int signal) {
-        commandContext.stop();
-        exit(signal);
+        outputBlockSize = static_cast<std::size_t>(stringToLong(argv[BLOCK_SIZE_ARG_INDEX]));
     }
 }
 
@@ -63,13 +66,11 @@ int main(int argc, char* argv[]) {
         return VALIDATION_ERROR;
     }
 
-    //the program must finish its work if "terminate" signal has come.
-    signal(SIGTERM, &processShutdownHandler);
-    signal(SIGINT, &processShutdownHandler);
+    CommandProcessingContext commandContext;
+    context.init(blockSize);
 
-    commandContext.init(blockSize);
+    startShutdownHandler(commandContext);
 
-    //start up the server
     try {
         boost::asio::io_context ioContext;
 
@@ -81,6 +82,7 @@ int main(int argc, char* argv[]) {
         ioContext.run();
     } catch (const std::exception& e) {
         std::cerr << "Unexpected error occurred: " << e.what() << std::endl;
+        return UNEXPECTED_ERROR;
     }
 
     return 0;

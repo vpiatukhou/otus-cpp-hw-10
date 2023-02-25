@@ -9,6 +9,7 @@ add_library(bulk_server STATIC AsyncCommandWriter.cpp
                                FileCommandWriter.cpp
                                RequestParser.cpp
                                Server.cpp
+                               ShutdownHandler.cpp
                                StaticCommandProcessor.cpp
                                TcpConnection.cpp
                                Util.cpp)
