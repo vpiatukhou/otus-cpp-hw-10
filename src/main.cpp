@@ -67,7 +67,7 @@ int main(int argc, char* argv[]) {
     }
 
     CommandProcessingContext commandContext;
-    context.init(blockSize);
+    commandContext.init(blockSize);
 
     startShutdownHandler(commandContext);
 
