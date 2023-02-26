@@ -17,18 +17,16 @@ namespace Homework {
      */
     class AsyncCommandWriter : public FlushCommandListener {
     public:
-        AsyncCommandWriter() = default;
+        /**
+         * Starts the threads.
+         */
+        AsyncCommandWriter();
         AsyncCommandWriter(const AsyncCommandWriter&) = delete;
         AsyncCommandWriter(AsyncCommandWriter&&) = delete;
         ~AsyncCommandWriter() = default;
 
         AsyncCommandWriter& operator=(const AsyncCommandWriter&) = delete;
         AsyncCommandWriter& operator=(AsyncCommandWriter&&) = delete;
-
-        /**
-         * Starts threads.
-         */
-        void start();
 
         /**
          * Waits until remaining command blocks are written and stops all threads.

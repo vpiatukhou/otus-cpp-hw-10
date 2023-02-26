@@ -13,9 +13,9 @@ void CommandProcessingContext::start(std::size_t blockSize) {
     commandWriters = { std::make_shared<ConsoleCommandWriter>(), std::make_shared<FileCommandWriter>() };
     staticCommandProcessor = std::make_unique<StaticCommandProcessor>(commandWriters, blockSize);
 
-    for (auto& writerPtr : commandWriters) {
-        static_cast<AsyncCommandWriter*>(writerPtr.get())->start();
-    }
+    //for (auto& writerPtr : commandWriters) {
+        //static_cast<AsyncCommandWriter*>(writerPtr.get())->start();
+    //}
 }
 
 void CommandProcessingContext::stop() {

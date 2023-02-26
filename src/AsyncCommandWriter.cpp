@@ -5,9 +5,6 @@
 namespace Homework {
 
     AsyncCommandWriter::AsyncCommandWriter(NumberOfThreads numberOfThreads_) : numberOfThreads(numberOfThreads_) {
-    }
-
-    void AsyncCommandWriter::start() {
         auto worker = [this](NumberOfThreads threadNumber) {
             auto predicate = [this] { return !commandBlocks.empty() || !isContinueProcessing; };
 
