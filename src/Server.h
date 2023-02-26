@@ -4,6 +4,7 @@
 
 #include "CommandProcessingContext.h"
 
+#include <memory>
 #include <stdint.h>
 
 namespace Homework {
@@ -15,14 +16,11 @@ namespace Homework {
      */
     class Server {
     public:
-        Server(boost::asio::io_context& ioContext_, Port port_, CommandProcessingContext& context_);
-
-        void start();
+        Server(boost::asio::io_context& ioContext_, Port port_, std::shared_ptr<CommandProcessingContext>& context_);
 
     private:
-        Port port;
+        std::shared_ptr<CommandProcessingContext> context;
         boost::asio::ip::tcp::acceptor acceptor;
-        CommandProcessingContext& context;
 
         void accept();
     };

@@ -1,22 +1,44 @@
 #include "ShutdownHandler.h"
+#include "ErrorCodes.h"
 
+#include <cstdlib>
 #include <signal.h>
-#include <thread> //TODO
+#include <thread>
 
-void Homework::startShutdownHandler(CommandProcessingContext& context) {
+#include <iostream>
+
+void Homework::startShutdownHandler(std::shared_ptr<CommandProcessingContext>& context) {
     sigset_t sigset;
-    sigemptyset(&sigset);
-    sigaddset(&sigset, SIGINT);
-    sigaddset(&sigset, SIGTERM);
-    pthread_sigmask(SIG_BLOCK, &sigset, nullptr);
+    if (sigemptyset(&sigset)) {
+        std::cerr << "Error cleaning signal set." << std::endl;
+        std::exit(INTERNAL_ERROR);
+    }
 
-    std::thread signalHandler([&context, &sigset]() {
-        int signum = 0;
-        sigwait(&sigset, &signum);
+    if (sigaddset(&sigset, SIGINT)) {
+        std::cerr << "Error adding SIGINT." << std::endl;
+        std::exit(INTERNAL_ERROR);
+    }
 
-        context.stop();
-        exit(signum);
+    if (sigaddset(&sigset, SIGTERM)) {
+        std::cerr << "Error adding SIGTERM." << std::endl;
+        std::exit(INTERNAL_ERROR);
+    }
+
+    if (pthread_sigmask(SIG_BLOCK, &sigset, nullptr)) {
+        std::cerr << "Error blocking signals." << std::endl;
+        std::exit(INTERNAL_ERROR);
+    }
+
+    std::thread shutdownThread([context, sigset] {
+        int exitCode = INTERNAL_ERROR;
+
+        if (sigwait(&sigset, &exitCode)) {
+            std::cerr << "Error waiting signal." << std::endl;
+        } else {
+            context->stop();
+        }
+        std::exit(exitCode);
     });
 
-    signalHandler.detach();
+    shutdownThread.detach();
 }

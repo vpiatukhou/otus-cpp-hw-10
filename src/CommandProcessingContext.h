@@ -19,24 +19,17 @@ namespace Homework {
         CommandProcessingContext() = default;
         CommandProcessingContext(const CommandProcessingContext&) = delete;
         CommandProcessingContext(CommandProcessingContext&&) = delete;
-        ~CommandProcessingContext() = default;
+        ~CommandProcessingContext();
 
         CommandProcessingContext& operator=(const CommandProcessingContext&) = delete;
         CommandProcessingContext& operator=(CommandProcessingContext&&) = delete;
 
-        /**
-         * Prepares the context to work. Starts command writer threads.
-         * 
-         * This method must be called before any interaction with the context.
-         */
-        void init(std::size_t blockSize);
+        void start(std::size_t blockSize);
 
         /**
-         * Processes remained commands. Stops command writer threads.
+         * Processes remained commands and stops writer threads.
          * 
-         * ATTENTION: This method blocks the caller thread until the remained commands are processed.
-         * 
-         * This method must be called before the instance of CommandProcessingContext is destroyed.
+         * ATTENTION: This method blocks the caller until the commands are processed.
          */
         void stop();
 

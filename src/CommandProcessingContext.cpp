@@ -5,9 +5,12 @@
 
 namespace Homework {
 
-void CommandProcessingContext::init(std::size_t blockSize) {
+CommandProcessingContext::~CommandProcessingContext() {
+    stop();
+}
+
+void CommandProcessingContext::start(std::size_t blockSize) {
     commandWriters = { std::make_shared<ConsoleCommandWriter>(), std::make_shared<FileCommandWriter>() };
-    
     staticCommandProcessor = std::make_unique<StaticCommandProcessor>(commandWriters, blockSize);
 
     for (auto& writerPtr : commandWriters) {

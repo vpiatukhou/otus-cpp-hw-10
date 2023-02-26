@@ -2,6 +2,8 @@
 
 #include "CommandProcessingContext.h"
 
+#include <memory>
+
 namespace Homework {
 
     /**
@@ -10,5 +12,5 @@ namespace Homework {
      * @param context the context is used to process remained commands.
      *                ATTENTION: make sure that the instance is not destroyed after this method returns control.
      */
-    void startShutdownHandler(CommandProcessingContext& context);
+    void startShutdownHandler(std::shared_ptr<CommandProcessingContext>& context);
 }

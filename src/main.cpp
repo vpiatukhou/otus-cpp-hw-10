@@ -1,4 +1,5 @@
 ﻿#include "Server.h"
+#include "ErrorCodes.h"
 #include "ShutdownHandler.h"
 
 #include <boost/asio.hpp>
@@ -8,28 +9,23 @@
 #include <cstdint>
 #include <iostream>
 #include <limits>
+#include <memory>
 #include <stdexcept>
 
 namespace Homework {
 
     namespace {
-        const int UNEXPECTED_ERROR = -1;
-        const int VALIDATION_ERROR = -2;
         const std::uint8_t NUMBER_OF_ARGUMENTS = 3;
         const std::uint8_t PORT_ARG_INDEX = 1;
         const std::uint8_t BLOCK_SIZE_ARG_INDEX = 2;
 
         const Port MAX_PORT = 65535;
-
-        const std::string PORT_AND_BLOCK_SIZE_NOT_POSITIVE_MSG = "PORT and BLOCK_SIZE must be positive numbers.";
-        const std::string INVALID_PORT_MSG = "A port must be in the range [0-" + std::to_string(MAX_PORT) + "].";
-        const std::string INVALID_NUMBER_OF_ARGUMETNS = "'bulk_server' requires 2 arguments.\n\nUsage:\tbulk_server PORT BLOCK_SIZE\n";
     }
 
     long stringToLong(const std::string& input) {
         for (auto character : input) {
             if (!std::isdigit(character)) {
-                throw std::invalid_argument(PORT_AND_BLOCK_SIZE_NOT_POSITIVE_MSG);
+                throw std::invalid_argument("PORT and BLOCK_SIZE must be positive numbers.");
             }
         }
         return std::stoul(input);
@@ -38,14 +34,14 @@ namespace Homework {
     Port stringToPort(const std::string& portAsStr) {
         long number = stringToLong(portAsStr);
         if (number > MAX_PORT) {
-            throw std::invalid_argument(INVALID_PORT_MSG);
+            throw std::invalid_argument("The port must be in the range [0-" + std::to_string(MAX_PORT) + "].");
         }
         return static_cast<Port>(number);
     }
 
     void readProgramArguments(int argc, char* argv[], Port& outputPort, std::size_t& outputBlockSize) {
         if (argc != NUMBER_OF_ARGUMENTS) {
-            throw std::invalid_argument(INVALID_NUMBER_OF_ARGUMETNS);
+            throw std::invalid_argument("'bulk_server' requires 2 arguments.\n\nUsage:\tbulk_server PORT BLOCK_SIZE\n");
         }
         outputPort = stringToPort(argv[PORT_ARG_INDEX]);
         outputBlockSize = static_cast<std::size_t>(stringToLong(argv[BLOCK_SIZE_ARG_INDEX]));
@@ -66,23 +62,21 @@ int main(int argc, char* argv[]) {
         return VALIDATION_ERROR;
     }
 
-    CommandProcessingContext commandContext;
-    commandContext.init(blockSize);
-
-    startShutdownHandler(commandContext);
-
     try {
-        boost::asio::io_context ioContext;
+        auto commandContext = std::make_shared<CommandProcessingContext>();
+        startShutdownHandler(commandContext);
 
+        commandContext->start(blockSize);
+
+        boost::asio::io_context ioContext;
         Server server(ioContext, port, commandContext);
-        server.start();
 
         std::cout << "The server is listening on the port " << port << '.' << std::endl;
 
         ioContext.run();
     } catch (const std::exception& e) {
-        std::cerr << "Unexpected error occurred: " << e.what() << std::endl;
-        return UNEXPECTED_ERROR;
+        std::cerr << "Internal error: " << e.what() << std::endl;
+        return INTERNAL_ERROR;
     }
 
     return 0;
