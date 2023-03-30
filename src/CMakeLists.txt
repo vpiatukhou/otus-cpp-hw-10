@@ -9,11 +9,10 @@ add_library(bulk_server STATIC AsyncCommandWriter.cpp
                                FileCommandWriter.cpp
                                RequestParser.cpp
                                Server.cpp
-                               ShutdownHandler.cpp
                                StaticCommandProcessor.cpp
                                TcpConnection.cpp
                                Util.cpp)
-add_executable(bulk_server_cli main.cpp)
+add_executable(bulk_server_cli Main.cpp)
 
 #rename the executable to "bulk_server"
 set_target_properties(bulk_server_cli PROPERTIES OUTPUT_NAME bulk_server)

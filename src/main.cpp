@@ -1,6 +1,5 @@
 ﻿#include "Server.h"
 #include "ErrorCodes.h"
-#include "ShutdownHandler.h"
 
 #include <boost/asio.hpp>
 
@@ -62,13 +61,26 @@ int main(int argc, char* argv[]) {
         return VALIDATION_ERROR;
     }
 
-    try {
-        auto commandContext = std::make_shared<CommandProcessingContext>();
-        startShutdownHandler(commandContext);
+    boost::asio::io_context ioContext;
+    auto commandContext = std::make_shared<CommandProcessingContext>();
 
+    //start listening for 'terminate' signals
+    boost::asio::signal_set signals(ioContext, SIGINT, SIGTERM);
+    signals.async_wait([&ioContext, commandContext](const boost::system::error_code& error, int signalNumber) {
+        if (error) {
+            std::cout << "An error occurred in the signal handler: " << error << std::endl;
+        } else {
+            std::cout << "Terminate signal '" << signalNumber << "' was received." << std::endl;
+            commandContext->stop();
+            ioContext.stop();
+        }
+
+    });
+
+    //start the server
+    try {
         commandContext->start(blockSize);
 
-        boost::asio::io_context ioContext;
         Server server(ioContext, port, commandContext);
 
         std::cout << "The server is listening on the port " << port << '.' << std::endl;
