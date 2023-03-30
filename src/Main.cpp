@@ -49,7 +49,6 @@ namespace Homework {
 
 int main(int argc, char* argv[]) {
     using namespace Homework;
-    using boost::asio::ip::tcp;
 
     Port port;
     std::size_t blockSize;
